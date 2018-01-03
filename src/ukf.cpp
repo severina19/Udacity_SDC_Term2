@@ -26,10 +26,10 @@ UKF::UKF() {
   // initial covariance matrix
   P_ = MatrixXd(5, 5);
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 4;
+  std_a_ = 1.5;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 0.1;
+  std_yawdd_ = 0.5;
 
   // Laser measurement noise standard deviation position1 in m
   std_laspx_ = 0.15;
@@ -55,22 +55,6 @@ UKF::UKF() {
 
   //create sigma point matrix
   Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
-  P_.fill(0.0);
-  P_(0,0)=5;
-  P_(1,1)=5;
-  P_(2,2)=5;
-  P_(3,3)=5;
-  P_(4,4)=5;
-  x_.fill(0.0);
-  x_(0)=1.0;
-  x_(1)=1.0;
-
-  // set weights
-  weights_ = VectorXd(2*n_aug_+1);
-  weights_(0) = lambda_/(lambda_+n_aug_);
-  for (int i=1; i<2*n_aug_+1; i++) {  //2n+1 weights
-    weights_(i) = 0.5/(n_aug_+lambda_);
-  }
 
   /**
   TODO:
@@ -94,6 +78,50 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   Complete this function! Make sure you switch between lidar and radar
   measurements.
   */
+    if(!is_initialized_){
+    // Initial covariance matrix
+        P_ << 1, 0, 0, 0, 0,
+              0, 1, 0, 0, 0,
+              0, 0, 1, 0, 0,
+              0, 0, 0, 1, 0,
+              0, 0, 0, 0, 1;
+        if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+          // Convert radar from polar to cartesian coordinates and initialize state.
+          float rho = meas_package.raw_measurements_[0]; // range
+          float phi = meas_package.raw_measurements_[1]; // bearing
+          float rho_dot = meas_package.raw_measurements_[2]; // velocity of rho
+          // Coordinates convertion from polar to cartesian
+          float px = rho * cos(phi);
+          float py = rho * sin(phi);
+          float vx = rho_dot * cos(phi);
+          float vy = rho_dot * sin(phi);
+          float v  = sqrt(vx * vx + vy * vy);
+          x_ << px, py, v, 0, 0;
+        }
+        else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+          x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0, 0;
+          // Deal with the special case initialisation problems
+          if (fabs(x_(0)) < EPS and fabs(x_(1)) < EPS){
+            x_(0) = EPS;
+            x_(1) = EPS;
+          }
+        }
+
+        // set weights
+        weights_ = VectorXd(2*n_aug_+1);
+        weights_(0) = lambda_/(lambda_+n_aug_);
+        for (int i=1; i<2*n_aug_+1; i++) {  //2n+1 weights
+          weights_(i) = 0.5/(n_aug_+lambda_);
+        }
+        // Save the initiall timestamp for dt calculation
+        time_us_ = meas_package.timestamp_;
+        // Done initializing, no need to predict or update
+        is_initialized_ = true;
+        //cout << "Init" << endl;
+        //cout << "x_" << x_ << endl;
+        return;
+
+    }
 
     double delta_t;
     delta_t = (meas_package.timestamp_-time_us_)/1000000.0;
@@ -101,19 +129,16 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
     time_us_ = meas_package.timestamp_;
 
-    if(is_initialized_ == true)
+    Prediction(delta_t);
+    if((meas_package.sensor_type_ == MeasurementPackage::RADAR) && (use_radar_ == true) )
     {
-        Prediction(delta_t);
-        if((meas_package.sensor_type_ == MeasurementPackage::RADAR) && (use_radar_ == true) )
-        {
-            UpdateRadar(meas_package);
-        }
-        else if ((meas_package.sensor_type_ == MeasurementPackage::LASER) && (use_laser_ == true))
-        {
-            UpdateLidar(meas_package);
-        }
+        UpdateRadar(meas_package);
     }
-    is_initialized_ = true;
+    else if ((meas_package.sensor_type_ == MeasurementPackage::LASER) && (use_laser_ == true))
+    {
+        UpdateLidar(meas_package);
+    }
+
 }
 
 /**
