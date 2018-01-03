@@ -92,6 +92,11 @@ public:
    */
   void ProcessMeasurement(MeasurementPackage meas_package);
 
+private:
+  void AugmentSigmaPoints();
+  void PredictSigmaPoint(double delta_t);
+  void PredictMeanAndCovariance();
+
   /**
    * Prediction Predicts sigma points, the state, and the state covariance
    * matrix
