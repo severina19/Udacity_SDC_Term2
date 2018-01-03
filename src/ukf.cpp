@@ -101,11 +101,11 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     if(is_initialized_ == true)
     {
         Prediction(delta_t);
-        if(meas_package.sensor_type_ == MeasurementPackage::RADAR)
+        if((meas_package.sensor_type_ == MeasurementPackage::RADAR) && (use_rader_ == true) )
         {
             UpdateRadar(meas_package);
         }
-        else if (meas_package.sensor_type_ == MeasurementPackage::LASER)
+        else if ((meas_package.sensor_type_ == MeasurementPackage::LASER) && (use_laser_ == true))
         {
             UpdateLidar(meas_package);
         }
@@ -244,6 +244,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 int n_z = 3;
 MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
 //transform sigma points into measurement space
+    cout<<"line 247"<<endl;
   for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 simga points
 
     // extract values for better readibility
@@ -260,7 +261,7 @@ MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
     Zsig(1,i) = atan2(p_y,p_x);                                 //phi
     Zsig(2,i) = (p_x*v1 + p_y*v2 ) / sqrt(p_x*p_x + p_y*p_y);   //r_dot
   }
-
+    cout<<"line 264"<<endl;
   //mean predicted measurement
   VectorXd z_pred = VectorXd(n_z);
   z_pred.fill(0.0);
@@ -281,7 +282,7 @@ MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
 
     S = S + weights_(i) * z_diff * z_diff.transpose();
   }
-
+    cout<<"line 285"<<endl;
   //add measurement noise covariance matrix
   MatrixXd R = MatrixXd(n_z,n_z);
   R <<    std_radr_*std_radr_, 0, 0,
@@ -311,6 +312,7 @@ MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
     Tc = Tc + weights_(i) * x_diff * z_diff.transpose();
   }
 
+      cout<<"line 315"<<endl;
   //Kalman gain K;
   MatrixXd K = Tc * S.inverse();
 
