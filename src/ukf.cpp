@@ -48,10 +48,10 @@ UKF::UKF() {
   n_aug_ = 7;
 
   //define spreading parameter
-  lambda_ = 3 - n_x_;
+  lambda_ = 3 - n_aug_;
 
   //create sigma point matrix
-  Xsig_pred_ = MatrixXd(n_aug_, 2 * n_aug_ + 1);
+  Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
   P_.fill(0.0);
   P_(0,0)=1;
   P_(1,1)=1;
@@ -108,20 +108,21 @@ void UKF::Prediction(double delta_t) {
   Complete this function! Estimate the object's location. Modify the state
   vector, x_. Predict sigma points, the state, and the state covariance matrix.
   */
-    VectorXd x_aug = VectorXd(7);
-    MatrixXd P_aug = MatrixXd(7,7);
-    MatrixXd Xsig_aug = MatrixXd(7,2*n_aug_+1);
+    VectorXd x_aug = VectorXd(n_aug_);
+    MatrixXd P_aug = MatrixXd(n_aug_,n_aug_);
+    MatrixXd Xsig_aug = MatrixXd(n_aug_,2*n_aug_+1);
     MatrixXd Q = MatrixXd(2,2);
+    Q.fill(0.0);
     Q(0,0)= std_a_*std_a_;
     Q(1,1)= std_yawdd_*std_yawdd_;
-    x_aug.head(5)=x_;
+    x_aug.head(n_x_)=x_;
     x_aug(5)=0;
     x_aug(6)=0;
     P_aug.topLeftCorner(n_x_,n_x_) =P_;
     P_aug.bottomRightCorner(2,2)=Q;
     //calculate square root of P
     MatrixXd A = P_aug.llt().matrixL();
-    Xsig_pred_.col(0) << x_aug;
+    Xsig_aug.col(0) << x_aug;
     for (int i=0;i < n_aug_; i++)
     {
         Xsig_aug.col(i+1)=x_aug+sqrt(lambda_ + n_aug_)*A.col(i);
