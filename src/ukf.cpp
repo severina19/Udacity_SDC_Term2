@@ -88,12 +88,30 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   Complete this function! Make sure you switch between lidar and radar
   measurements.
   */
+    static long timestamp_last;
+    static int counter=0;
+    double delta_t =0;
+    if(is_initialized_ == 0)
+    {
+        counter ++;
+    }
+    if(counter>1)
+    {
+        is_initialized_ = 1;
+        delta_t = meas_package.timestamp_-timestamp_last;
+    }
 
-    is_initialized_ = 1;
-    //if(meas_package.sensor_type_ == RADAR)
-    //{
+    timestamp_last = meas_package.timestamp_;
 
-    //}
+    Prediction(delta_t);
+    if(meas_package.sensor_type_ == MeasurementPackage::RADAR)
+    {
+        UpdateRadar(meas_package);
+    }
+    else if (meas_package.sensor_type_ == MeasurementPackage::LASER)
+    {
+        UpdateLidar(meas_package);
+    }
 }
 
 /**
