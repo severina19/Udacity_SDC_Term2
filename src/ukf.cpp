@@ -159,7 +159,7 @@ void UKF::AugmentSigmaPoints() {
 	P_aug(6,6)=std_yawdd_*std_yawdd_;
     //calculate square root of P
     MatrixXd A = P_aug.llt().matrixL();
-    Xsig_aug.col(0) = x_aug;
+    Xsig_aug_.col(0) = x_aug;
     for (int i=0;i < n_aug_; i++)
     {
         Xsig_aug_.col(i+1)=x_aug+sqrt(lambda_ + n_aug_)*A.col(i);
