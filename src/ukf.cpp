@@ -26,7 +26,7 @@ UKF::UKF() {
   // initial covariance matrix
   P_ = MatrixXd(5, 5);
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 1.5;
+  std_a_ = 1;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
   std_yawdd_ = 0.5;
@@ -76,26 +76,32 @@ UKF::~UKF() {}
 void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     if(!is_initialized_){
     // Initial covariance matrix
-        P_ << 1, 0, 0, 0, 0,
-              0, 1, 0, 0, 0,
-              0, 0, 1, 0, 0,
-              0, 0, 0, 1, 0,
-              0, 0, 0, 0, 1;
+
         if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
           // Convert radar from polar to cartesian coordinates and initialize state.
-          float rho = meas_package.raw_measurements_[0]; // range
-          float phi = meas_package.raw_measurements_[1]; // bearing
-          float rho_dot = meas_package.raw_measurements_[2]; // velocity of rho
+          double phi = meas_package.raw_measurements_[1]; // bearing
+          double rho_dot = meas_package.raw_measurements_[2]; // velocity of rho
           // Coordinates convertion from polar to cartesian
-          float px = rho * cos(phi);
-          float py = rho * sin(phi);
-          float vx = rho_dot * cos(phi);
-          float vy = rho_dot * sin(phi);
-          float v  = sqrt(vx * vx + vy * vy);
-          x_ << px, py, v, 0, 0;
+          double px = rho * cos(phi);
+          double py = rho * sin(phi);
+          double vx = rho_dot * cos(phi);
+          double vy = rho_dot * sin(phi);
+          double v  = sqrt(vx * vx + vy * vy);
+          x_ << px, py, v, rhodot * cos(phi), rhodot * sin(phi);
+          P_ << std_radr_*std_radr_, 0, 0, 0, 0,
+                      0, std_radr_*std_radr_, 0, 0, 0,
+                      0, 0, 1, 0, 0,
+                      0, 0, 0, std_radphi_, 0,
+                      0, 0, 0, 0, std_radphi_;
         }
         else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
-          x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0, 0;
+          x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 4, 0.5, 0;
+          P_ << std_laspx_*std_laspx_, 0, 0, 0, 0,
+                0, std_laspy_*std_laspy_, 0, 0, 0,
+                0, 0, 1, 0, 0,
+                0, 0, 0, 1, 0,
+                0, 0, 0, 0, 1;
+
           // Deal with the special case initialisation problems
           if (fabs(x_(0)) < EPS and fabs(x_(1)) < EPS){
             x_(0) = EPS;
