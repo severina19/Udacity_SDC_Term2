@@ -101,7 +101,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     if(is_initialized_ == true)
     {
         Prediction(delta_t);
-        if((meas_package.sensor_type_ == MeasurementPackage::RADAR) && (use_rader_ == true) )
+        if((meas_package.sensor_type_ == MeasurementPackage::RADAR) && (use_radar_ == true) )
         {
             UpdateRadar(meas_package);
         }
