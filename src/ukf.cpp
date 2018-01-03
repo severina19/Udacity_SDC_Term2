@@ -149,6 +149,7 @@ void UKF::Prediction(double delta_t) {
         Xsig_aug.col(i+1+n_aug_)=x_aug-sqrt(lambda_ + n_aug_)*A.col(i);
     }
 cout<<"line 158"<<endl;
+cout<<"Xsig_aug is: "<<Xsig_aug<<endl;
     //predict sigma points
     for (int i = 0; i< 2*n_aug_+1; i++)
     {
@@ -262,6 +263,7 @@ MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
     Zsig(1,i) = atan2(p_y,p_x);                                 //phi
     Zsig(2,i) = (p_x*v1 + p_y*v2 ) / sqrt(p_x*p_x + p_y*p_y);   //r_dot
   }
+  cout<<"Xsig_pred_ is: "<<Xsig_pred_<<endl;
     cout<<"line 264"<<endl;
   //mean predicted measurement
   VectorXd z_pred = VectorXd(n_z);
