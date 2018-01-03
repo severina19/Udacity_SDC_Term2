@@ -106,7 +106,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
         cout<<"timestamp_last is: "<<timestamp_last<<endl;
         cout<<"current timestamp is: "<<meas_package.timestamp_<<endl;
-        cout<<"diff is: "<<meas_package.timestamp_-timestamp_last<<endl;
+        cout<<"diff is: "<<delta_t<<endl;
     }
     timestamp_last = meas_package.timestamp_;
 
@@ -138,6 +138,7 @@ void UKF::Prediction(double delta_t) {
     MatrixXd Xsig_aug = MatrixXd(n_aug_,2*n_aug_+1);
     MatrixXd Q = MatrixXd(2,2);
     Q.fill(0.0);
+    P_aug.fill(0.0);
     Q(0,0)= std_a_*std_a_;
     Q(1,1)= std_yawdd_*std_yawdd_;
     x_aug.head(n_x_)=x_;
@@ -148,12 +149,13 @@ void UKF::Prediction(double delta_t) {
     //calculate square root of P
     MatrixXd A = P_aug.llt().matrixL();
     Xsig_aug.col(0) << x_aug;
+    cout<<"line 152"<<endl;
     for (int i=0;i < n_aug_; i++)
     {
         Xsig_aug.col(i+1)=x_aug+sqrt(lambda_ + n_aug_)*A.col(i);
         Xsig_aug.col(i+1+n_aug_)=x_aug-sqrt(lambda_ + n_aug_)*A.col(i);
     }
-
+cout<<"line 158"<<endl;
     //predict sigma points
     for (int i = 0; i< 2*n_aug_+1; i++)
     {
@@ -198,24 +200,22 @@ void UKF::Prediction(double delta_t) {
       Xsig_pred_(3,i) = yaw_p;
       Xsig_pred_(4,i) = yawd_p;
     }
-      //predicted state mean
-      for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
-        x_ = x_+ weights_(i) * Xsig_pred_.col(i);
-      }
-
-      //predicted state covariance matrix
-      //P.fill(0.0);
-      for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
-
-        // state difference
-        VectorXd x_diff = Xsig_pred_.col(i) - x_;
+    cout<<"line 203"<<endl;
+    //predicted state mean
+    for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
+      x_ = x_+ weights_(i) * Xsig_pred_.col(i);
+    }
+    cout<<"line 208"<<endl;
+    //predicted state covariance matrix
+    for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
+    // state difference
+       VectorXd x_diff = Xsig_pred_.col(i) - x_;
         //angle normalization
         while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
         while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
-
         P_ = P_ + weights_(i) * x_diff * x_diff.transpose() ;
       }
-
+    cout<<"line 218"<<endl;
 }
 
 /**
