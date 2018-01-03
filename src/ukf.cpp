@@ -11,6 +11,8 @@ using std::vector;
  * Initializes Unscented Kalman filter
  */
 UKF::UKF() {
+
+  is_initialized_ =false;
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = false;
 
@@ -92,14 +94,14 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     static long timestamp_last;
     static int counter=0;
     double delta_t =0;
-    if(is_initialized_ == 0)
+    if(is_initialized_ == false)
     {
         counter ++;
         cout<<"counter value is: "<<counter<<endl;
     }
     if(counter>1)
     {
-        is_initialized_ = 1;
+        is_initialized_ = true;
         delta_t = meas_package.timestamp_-timestamp_last;
 
         cout<<"timestamp_last is: "<<timestamp_last<<endl;
