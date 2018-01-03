@@ -7,7 +7,7 @@
 #include <string>
 #include <fstream>
 
-#define EPS 0.001
+#define EPS 0.00001
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -31,6 +31,10 @@ public:
 
   ///* predicted sigma points matrix
   MatrixXd Xsig_pred_;
+
+  MatrixXd R_radar_;
+
+  MatrixXd R_laser_;
 
   ///* time when the state is true, in us
   long long time_us_;
