@@ -99,8 +99,11 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     {
         is_initialized_ = 1;
         delta_t = meas_package.timestamp_-timestamp_last;
-    }
 
+        cout<<"timestamp_last is: "<<timestamp_last<<endl;
+        cout<<"current timestamp is: "<<meas_package.timestamp_<<endl;
+        cout<<"diff is: "<<meas_package.timestamp_-timestamp_last<<endl;
+    }
     timestamp_last = meas_package.timestamp_;
 
     Prediction(delta_t);
