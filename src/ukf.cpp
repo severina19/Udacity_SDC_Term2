@@ -21,7 +21,6 @@ UKF::UKF() {
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = true;
 
-  time_us_ =0;
   // if this is false, radar measurements will be ignored (except during init)
   use_radar_ = true;
 
@@ -52,7 +51,7 @@ UKF::UKF() {
   std_radrd_ =0.3;
 
   //set state dimension
-  n_x_ = x_.size();
+  n_x_ = 5;
 
   n_aug_ = n_x_+2;
 
@@ -135,6 +134,9 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     {
         UpdateLidar(meas_package);
     }
+    // print the output
+    cout << "x_ = " << x_ << endl;
+    cout << "P_ = " << P_ << endl;
 
 }
 
