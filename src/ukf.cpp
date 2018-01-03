@@ -89,7 +89,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
           double vx = rho_dot * cos(phi);
           double vy = rho_dot * sin(phi);
           double v  = sqrt(vx * vx + vy * vy);
-          x_ << px, py, v, rhodot * cos(phi), rhodot * sin(phi);
+          x_ << px, py, v, rho_dot * cos(phi), rho_dot * sin(phi);
           P_ << std_radr_*std_radr_, 0, 0, 0, 0,
                       0, std_radr_*std_radr_, 0, 0, 0,
                       0, 0, 1, 0, 0,
