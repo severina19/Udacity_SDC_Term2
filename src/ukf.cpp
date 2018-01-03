@@ -15,6 +15,7 @@ UKF::UKF() {
   is_initialized_ =false;
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = false;
+
   time_us_ =0;
   // if this is false, radar measurements will be ignored (except during init)
   use_radar_ = true;
@@ -318,7 +319,7 @@ MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
 
   //residual
   VectorXd z_diff = z - z_pred;
-
+  cout<<"z_diff is: "<<z_diff<<endl;
   //angle normalization
   while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
   while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
@@ -326,4 +327,5 @@ MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
   //update state mean and covariance matrix
   x_ = x_ + K * z_diff;
   P_ = P_ - K*S*K.transpose();
+  cout<<"line 329"<<endl;
 }
