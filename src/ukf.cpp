@@ -94,6 +94,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     if(is_initialized_ == 0)
     {
         counter ++;
+        cout<<"counter value is: "<<counter<<endl;
     }
     if(counter>1)
     {
