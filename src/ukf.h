@@ -32,6 +32,9 @@ public:
   ///* predicted sigma points matrix
   MatrixXd Xsig_pred_;
 
+  ///* augmented sigma points matrix
+  MatrixXd Xsig_aug_;
+
   MatrixXd R_radar_;
 
   MatrixXd R_laser_;

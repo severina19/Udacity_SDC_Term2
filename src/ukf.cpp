@@ -7,6 +7,11 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+#define M_2PI            (2.0*M_PI)
+
 /**
  * Initializes Unscented Kalman filter
  */
@@ -52,6 +57,9 @@ UKF::UKF() {
 
   //define spreading parameter
   lambda_ = 3 - n_aug_;
+
+  //* augmented sigma points matrix
+  Xsig_aug_ = MatrixXd(n_aug_, 2 * n_aug_ + 1);
 
   //create sigma point matrix
   Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
@@ -139,13 +147,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
  * @param {double} delta_t the change in time (in seconds) between the last
  * measurement and this one.
  */
-void UKF::Prediction(double delta_t) {
-  /**
-  TODO:
 
-  Complete this function! Estimate the object's location. Modify the state
-  vector, x_. Predict sigma points, the state, and the state covariance matrix.
-  */
+void UKF::AugmentSigmaPoints() {
     VectorXd x_aug = VectorXd(n_aug_);
     MatrixXd P_aug = MatrixXd(n_aug_,n_aug_);
     MatrixXd Xsig_aug = MatrixXd(n_aug_,2*n_aug_+1);
@@ -167,6 +170,11 @@ void UKF::Prediction(double delta_t) {
         Xsig_aug.col(i+1)=x_aug+sqrt(lambda_ + n_aug_)*A.col(i);
         Xsig_aug.col(i+1+n_aug_)=x_aug-sqrt(lambda_ + n_aug_)*A.col(i);
     }
+    Xsig_aug_ = Xsig_aug;
+}
+
+void UKF::PredictSigmaPoint(double delta_t) {
+
     //predict sigma points
     for (int i = 0; i< 2*n_aug_+1; i++)
     {
@@ -211,7 +219,8 @@ void UKF::Prediction(double delta_t) {
       Xsig_pred_(3,i) = yaw_p;
       Xsig_pred_(4,i) = yawd_p;
     }
-
+}
+void UKF::PredictMeanAndCovariance() {
     //predicted state mean
     //create vector for predicted state
     VectorXd x = VectorXd(n_x_);
@@ -233,6 +242,12 @@ void UKF::Prediction(double delta_t) {
       }
     x_ = x;
     P_ = P;
+
+}
+void UKF::Prediction(double delta_t) {
+    AugmentSigmaPoints();
+    PredictSigmaPoint(delta_t);
+    PredictMeanAndCovariance();
 }
 
 /**
@@ -240,14 +255,6 @@ void UKF::Prediction(double delta_t) {
  * @param {MeasurementPackage} meas_package
  */
 void UKF::UpdateLidar(MeasurementPackage meas_package) {
-  /**
-  TODO:
-
-  Complete this function! Use lidar data to update the belief about the object's
-  position. Modify the state vector, x_, and covariance, P_.
-
-  You'll also need to calculate the lidar NIS.
-  */
     VectorXd z = meas_package.raw_measurements_;
 
     //create matrix for sigma points in measurement space
@@ -300,16 +307,9 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   //residual
   VectorXd z_diff = z - z_pred;
-
-  cout<<"lidar z is: "<<z<<endl;
-
-  cout<<"lidar z_pred is: "<<z_pred<<endl;
-  cout<<"lidar z_diff is: "<<z_diff<<endl;
   //update state mean and covariance matrix
   x_ = x_ + K * z_diff;
   P_ = P_ - K*S*K.transpose();
-  cout<<"P from Lidar is: "<<P_<<endl;
-
 }
 
 /**
@@ -345,6 +345,8 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   for (int i=0; i < 2*n_aug_+1; i++) {
       z_pred = z_pred + weights_(i) * Zsig.col(i);
   }
+  while (z_pred(1)> M_PI) z_pred(1)-=2.*M_PI;
+  while (z_pred(1)<-M_PI) z_pred(1)+=2.*M_PI;
 
   //innovation covariance matrix S
   MatrixXd S = MatrixXd(n_z,n_z);
@@ -388,11 +390,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
   //residual
   VectorXd z_diff = z - z_pred;
-
-  cout<<"radar z is: "<<z<<endl;
-
-  cout<<"radar z_pred is: "<<z_pred<<endl;
-  cout<<"radar z_diff is: "<<z_diff<<endl;
   //angle normalization
   while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
   while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
@@ -400,5 +397,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   //update state mean and covariance matrix
   x_ = x_ + K * z_diff;
   P_ = P_ - K*S*K.transpose();
-  cout<<"P from radar is: "<<P_<<endl;
+
+  while (x_(3)> M_PI) x_(3)-=2.*M_PI;
+  while (x_(3)<-M_PI) x_(3)+=2.*M_PI;
 }
