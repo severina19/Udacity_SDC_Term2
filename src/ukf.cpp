@@ -102,8 +102,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     if(counter>1)
     {
         is_initialized_ = true;
-        delta_t = (meas_package.timestamp_-timestamp_last)/500000;
-
+        delta_t = (meas_package.timestamp_-timestamp_last)/1000000.0;
         cout<<"timestamp_last is: "<<timestamp_last<<endl;
         cout<<"current timestamp is: "<<meas_package.timestamp_<<endl;
         cout<<"diff is: "<<delta_t<<endl;
