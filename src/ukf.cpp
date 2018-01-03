@@ -298,6 +298,10 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
     VectorXd z_diff = Zsig.col(i) - z_pred;
     // state difference
     VectorXd x_diff = Xsig_pred_.col(i) - x_;
+    //angle normalization
+    while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
+    while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
+
     Tc = Tc + weights_(i) * x_diff * z_diff.transpose();
   }
   //Kalman gain K;
@@ -308,6 +312,8 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   //update state mean and covariance matrix
   x_ = x_ + K * z_diff;
   P_ = P_ - K*S*K.transpose();
+  while (x_(3)> M_PI) x_(3)-=2.*M_PI;
+  while (x_(3)<-M_PI) x_(3)+=2.*M_PI;
 }
 
 /**
