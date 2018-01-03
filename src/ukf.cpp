@@ -15,7 +15,7 @@ UKF::UKF() {
   is_initialized_ =false;
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = false;
-
+  time_us_ =0;
   // if this is false, radar measurements will be ignored (except during init)
   use_radar_ = true;
 
@@ -91,33 +91,26 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   Complete this function! Make sure you switch between lidar and radar
   measurements.
   */
-    static long timestamp_last;
-    static int counter=0;
-    double delta_t =0;
-    if(is_initialized_ == false)
-    {
-        counter ++;
-        cout<<"counter value is: "<<counter<<endl;
-    }
-    if(counter>1)
-    {
-        is_initialized_ = true;
-        delta_t = (meas_package.timestamp_-timestamp_last)/1000000.0;
-        cout<<"timestamp_last is: "<<timestamp_last<<endl;
-        cout<<"current timestamp is: "<<meas_package.timestamp_<<endl;
-        cout<<"diff is: "<<delta_t<<endl;
-    }
-    timestamp_last = meas_package.timestamp_;
 
-    Prediction(delta_t);
-    if(meas_package.sensor_type_ == MeasurementPackage::RADAR)
+    double delta_t;
+    delta_t = (meas_package.timestamp_-time_us_)/1000000.0;
+    cout<<"delta_t is: "<<delta_t<<endl;
+
+    time_us_ = meas_package.timestamp_;
+
+    if(is_initialized_ == true)
     {
-        UpdateRadar(meas_package);
+        Prediction(delta_t);
+        if(meas_package.sensor_type_ == MeasurementPackage::RADAR)
+        {
+            UpdateRadar(meas_package);
+        }
+        else if (meas_package.sensor_type_ == MeasurementPackage::LASER)
+        {
+            UpdateLidar(meas_package);
+        }
     }
-    else if (meas_package.sensor_type_ == MeasurementPackage::LASER)
-    {
-        UpdateLidar(meas_package);
-    }
+    is_initialized_ = true;
 }
 
 /**
