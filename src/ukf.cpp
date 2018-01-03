@@ -33,7 +33,7 @@ UKF::UKF() {
   std_a_ = 3;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ =0.5;;
+  std_yawdd_ =0.5;
 
   // Laser measurement noise standard deviation position1 in m
   std_laspx_ = 0.15;
@@ -67,7 +67,7 @@ UKF::UKF() {
   weights_ = VectorXd(2*n_aug_+1);
   // set weights
   weights_(0) = lambda_/(lambda_+n_aug_);
-  for (int i=1; i<weights_.size(); i++) {  //2n+1 weights
+  for (int i=1; i< 2*n_aug_+1; i++) {  //2n+1 weights
     weights_(i) = 0.5/(n_aug_+lambda_);
   }
 
@@ -109,12 +109,12 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
         else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
           x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0, 0;
         }
-
-        P_ << 1.0, 0, 0, 0, 0,
-              0, 1.0, 0, 0, 0,
-              0, 0, 1.0, 0, 0,
-              0, 0, 0, 1.0, 0,
-              0, 0, 0, 0, 1.0;
+        double sig=1.0;
+        P_ << sig, 0, 0, 0, 0,
+             0, sig, 0, 0, 0,
+             0, 0, sig, 0, 0,
+             0, 0, 0, sig, 0,
+             0, 0, 0, 0, sig;
 
         // Save the initiall timestamp for dt calculation
         time_us_ = meas_package.timestamp_;
@@ -130,7 +130,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     {
         UpdateRadar(meas_package);
     }
-    if ((meas_package.sensor_type_ == MeasurementPackage::LASER) && (use_laser_ == true))
+    else if ((meas_package.sensor_type_ == MeasurementPackage::LASER) && (use_laser_ == true))
     {
         UpdateLidar(meas_package);
     }
@@ -149,26 +149,22 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 void UKF::AugmentSigmaPoints() {
     VectorXd x_aug = VectorXd(n_aug_);
     MatrixXd P_aug = MatrixXd(n_aug_,n_aug_);
-    MatrixXd Xsig_aug = MatrixXd(n_aug_,2*n_aug_+1);
-    MatrixXd Q = MatrixXd(2,2);
-    Q.fill(0.0);
-    P_aug.fill(0.0);
-    Q(0,0)= std_a_*std_a_;
-    Q(1,1)= std_yawdd_*std_yawdd_;
+    
     x_aug.head(n_x_)=x_;
-    x_aug(5)=0;
-    x_aug(6)=0;
+    x_aug(5)=0.0;
+    x_aug(6)=0.0;
+    P_aug.fill(0.0);
     P_aug.topLeftCorner(n_x_,n_x_) =P_;
-    P_aug.bottomRightCorner(2,2)=Q;
+    P_aug(5,5)=std_a_*std_a_; 
+	P_aug(6,6)=std_yawdd_*std_yawdd_;
     //calculate square root of P
     MatrixXd A = P_aug.llt().matrixL();
-    Xsig_aug.col(0) << x_aug;
+    Xsig_aug.col(0) = x_aug;
     for (int i=0;i < n_aug_; i++)
     {
-        Xsig_aug.col(i+1)=x_aug+sqrt(lambda_ + n_aug_)*A.col(i);
-        Xsig_aug.col(i+1+n_aug_)=x_aug-sqrt(lambda_ + n_aug_)*A.col(i);
+        Xsig_aug_.col(i+1)=x_aug+sqrt(lambda_ + n_aug_)*A.col(i);
+        Xsig_aug_.col(i+1+n_aug_)=x_aug-sqrt(lambda_ + n_aug_)*A.col(i);
     }
-    Xsig_aug_ = Xsig_aug;
 }
 
 void UKF::PredictSigmaPoint(double delta_t) {
@@ -232,7 +228,7 @@ void UKF::PredictMeanAndCovariance() {
     //predicted state covariance matrix
     for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
     // state difference
-       VectorXd x_diff = Xsig_pred_.col(i) - x_;
+       VectorXd x_diff = Xsig_pred_.col(i) - x;
         //angle normalization
         while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
         while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
