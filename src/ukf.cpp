@@ -79,6 +79,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
         if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
           // Convert radar from polar to cartesian coordinates and initialize state.
+
+          double rho = meas_package.raw_measurements_[0];
           double phi = meas_package.raw_measurements_[1]; // bearing
           double rho_dot = meas_package.raw_measurements_[2]; // velocity of rho
           // Coordinates convertion from polar to cartesian
