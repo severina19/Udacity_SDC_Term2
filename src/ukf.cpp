@@ -62,6 +62,8 @@ UKF::UKF() {
   P_(3,3)=1;
   P_(4,4)=1;
   x_.fill(0.0);
+  x_(0)=1.0;
+  x_(1)=1.0;
 
   // set weights
   weights_ = VectorXd(2*n_aug_+1);
