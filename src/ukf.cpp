@@ -179,13 +179,13 @@ void UKF::PredictSigmaPoint(double delta_t) {
     for (int i = 0; i< 2*n_aug_+1; i++)
     {
       //extract values for better readability
-      double p_x = Xsig_aug(0,i);
-      double p_y = Xsig_aug(1,i);
-      double v = Xsig_aug(2,i);
-      double yaw = Xsig_aug(3,i);
-      double yawd = Xsig_aug(4,i);
-      double nu_a = Xsig_aug(5,i);
-      double nu_yawdd = Xsig_aug(6,i);
+      double p_x = Xsig_aug_(0,i);
+      double p_y = Xsig_aug_(1,i);
+      double v = Xsig_aug_(2,i);
+      double yaw = Xsig_aug_(3,i);
+      double yawd = Xsig_aug_(4,i);
+      double nu_a = Xsig_aug_(5,i);
+      double nu_yawdd = Xsig_aug_(6,i);
 
       //predicted state values
       double px_p, py_p;
