@@ -319,6 +319,10 @@ MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
 
   //residual
   VectorXd z_diff = z - z_pred;
+
+  cout<<"z is: "<<z<<endl;
+
+  cout<<"z_pred is: "<<z_pred<<endl;
   cout<<"z_diff is: "<<z_diff<<endl;
   //angle normalization
   while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
