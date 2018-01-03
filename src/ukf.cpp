@@ -46,9 +46,9 @@ UKF::UKF() {
   // Radar measurement noise standard deviation radius change in m/s
 
   //set state dimension
-  n_x_ = 5;
+  n_x_ = x_.size();
 
-  n_aug_ = 7;
+  n_aug_ = n_x_+2;
 
   //define spreading parameter
   lambda_ = 3 - n_aug_;
@@ -56,6 +56,8 @@ UKF::UKF() {
   //create sigma point matrix
   Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
 
+
+  weights_ = VectorXd(2*n_aug_+1);
   /**
   TODO:
 
@@ -72,12 +74,6 @@ UKF::~UKF() {}
  * either radar or laser.
  */
 void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
-  /**
-  TODO:
-
-  Complete this function! Make sure you switch between lidar and radar
-  measurements.
-  */
     if(!is_initialized_){
     // Initial covariance matrix
         P_ << 1, 0, 0, 0, 0,
@@ -108,33 +104,26 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
         }
 
         // set weights
-        weights_ = VectorXd(2*n_aug_+1);
         weights_(0) = lambda_/(lambda_+n_aug_);
-        for (int i=1; i<2*n_aug_+1; i++) {  //2n+1 weights
+        for (int i=1; i<weights_.size(); i++) {  //2n+1 weights
           weights_(i) = 0.5/(n_aug_+lambda_);
         }
         // Save the initiall timestamp for dt calculation
         time_us_ = meas_package.timestamp_;
-        // Done initializing, no need to predict or update
-        is_initialized_ = true;
-        //cout << "Init" << endl;
-        //cout << "x_" << x_ << endl;
-        return;
 
+        is_initialized_ = true;
+        return;
     }
 
-    double delta_t;
-    delta_t = (meas_package.timestamp_-time_us_)/1000000.0;
+    double delta_t = (meas_package.timestamp_-time_us_)/1000000.0;
     cout<<"delta_t is: "<<delta_t<<endl;
-
     time_us_ = meas_package.timestamp_;
-
     Prediction(delta_t);
     if((meas_package.sensor_type_ == MeasurementPackage::RADAR) && (use_radar_ == true) )
     {
         UpdateRadar(meas_package);
     }
-    else if ((meas_package.sensor_type_ == MeasurementPackage::LASER) && (use_laser_ == true))
+    if ((meas_package.sensor_type_ == MeasurementPackage::LASER) && (use_laser_ == true))
     {
         UpdateLidar(meas_package);
     }
@@ -220,9 +209,8 @@ void UKF::Prediction(double delta_t) {
     }
 
     //predicted state mean
-    for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
-      x_ = x_+ weights_(i) * Xsig_pred_.col(i);
-    }
+    x_ = Xsig_pred_ * weights_;
+    P_.fill(0.0);
     //predicted state covariance matrix
     for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
     // state difference
@@ -319,14 +307,6 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
  * @param {MeasurementPackage} meas_package
  */
 void UKF::UpdateRadar(MeasurementPackage meas_package) {
-  /**
-  TODO:
-
-  Complete this function! Use radar data to update the belief about the object's
-  position. Modify the state vector, x_, and covariance, P_.
-
-  You'll also need to calculate the radar NIS.
-  */
     VectorXd z = meas_package.raw_measurements_;
 
     //create matrix for sigma points in measurement space
