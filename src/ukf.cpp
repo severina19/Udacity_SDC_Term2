@@ -89,7 +89,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   measurements.
   */
 
-    is_initialized_ = TRUE;
+    is_initialized_ = 1;
     //if(meas_package.sensor_type_ == RADAR)
     //{
 
